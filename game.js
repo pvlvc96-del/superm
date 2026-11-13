@@ -122,11 +122,17 @@ const S = {
   levo: false, desno: false, skokDrzi: false, trci: false,
   poeni: 0, novcici: 0, zivoti: 3, vreme: 300, vremeBrojac: 0, kombo: 0,
   najboljiRezultat: 0,
+  lik: 'M',                    // 'M' = momak, 'Z' = devojka
   kamera: 0, animBrojac: 0,
   neprijatelji: [], efekti: [], cokanji: [],
 };
 
 try { S.najboljiRezultat = parseInt(localStorage.getItem('superm-najbolji'), 10) || 0; } catch (e) { }
+try { if (localStorage.getItem('superm-lik') === 'Z') S.lik = 'Z'; } catch (e) { }
+function izaberiLik(l) {
+  S.lik = l;
+  try { localStorage.setItem('superm-lik', l); } catch (e) { }
+}
 function sacuvajNajbolji() {
   S.najboljiRezultat = Math.max(S.najboljiRezultat, S.poeni);
   try { localStorage.setItem('superm-najbolji', String(S.najboljiRezultat)); } catch (e) { }
@@ -566,7 +572,7 @@ function nacrtaj() {
   for (const n of S.neprijatelji) nacrtajNeprijatelja(n, kx);
   nacrtajEfekte(kx);
   if (S.stanje !== 'NASLOVNA' && S.stanje !== 'KRAJ_IGRE' && S.stanje !== 'SVET_ZAVRSEN') nacrtajIgraca(kx);
-  nacrtajHUD();
+  if (S.stanje !== 'NASLOVNA') nacrtajHUD();
   nacrtajPoruke();
 }
 
@@ -721,13 +727,12 @@ const CARAPA = rgb(28, 28, 30), SARA = rgb(225, 70, 55), SARA2 = rgb(240, 200, 6
 const OPANAK = rgb(210, 170, 120), OPANAK_TAMNI = rgb(150, 108, 66);
 const OBRIS = rgb(35, 30, 35);
 
-function nacrtajLik(x, y, razmera, desno, faza, poza) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(razmera, razmera);
-  if (!desno) { ctx.translate(24, 0); ctx.scale(-1, 1); }
-  ctx.lineWidth = 0.9; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+function nacrtajLik(x, y, razmera, desno, faza, poza, koji) {
+  if ((koji || S.lik) === 'Z') nacrtajDevojku(x, y, razmera, desno, faza, poza);
+  else nacrtajMomka(x, y, razmera, desno, faza, poza);
+}
 
+function uglovi(poza, faza) {
   let nogaPrednja = 0, nogaZadnja = 0, rukaPrednja = 0, rukaZadnja = 0, odskok = 0;
   if (poza === 1) {
     const s = Math.sin(faza);
@@ -741,6 +746,17 @@ function nacrtajLik(x, y, razmera, desno, faza, poza) {
   } else {
     odskok = Math.sin(S.animBrojac * 0.06) * 0.4;
   }
+  return { nogaPrednja, nogaZadnja, rukaPrednja, rukaZadnja, odskok };
+}
+
+function nacrtajMomka(x, y, razmera, desno, faza, poza) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(razmera, razmera);
+  if (!desno) { ctx.translate(24, 0); ctx.scale(-1, 1); }
+  ctx.lineWidth = 0.9; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  const { nogaPrednja, nogaZadnja, rukaPrednja, rukaZadnja, odskok } = uglovi(poza, faza);
   ctx.translate(0, odskok);
 
   nacrtajRuku(9, 17, rukaZadnja, true);
@@ -872,6 +888,198 @@ function nacrtajRuku(ramX, ramY, ugao, zadnja) {
   ctx.restore();
 }
 
+// =====================================================================
+// DEVOJKA u srpskoj narodnoj nošnji (isti okvir 24 x 38, iste poze kao momak)
+// =====================================================================
+const KOSA_Z = rgb(58, 34, 22), KOSA_Z_SVETLA = rgb(92, 58, 38);
+const JELEK_Z = rgb(22, 22, 26), ZLATO = rgb(222, 178, 62), ZLATO_TAMNO = rgb(150, 110, 30);
+const SUKNJA = rgb(180, 30, 42), SUKNJA_ZELENA = rgb(40, 120, 70), SUKNJA_TAMNA = rgb(40, 20, 30);
+const PREGACA = rgb(24, 24, 30), POJAS_Z = rgb(205, 40, 55), POJAS_ROZE = rgb(235, 100, 150);
+const MASNA = rgb(225, 35, 40);
+const CVECE = [rgb(230, 60, 70), rgb(240, 120, 170), rgb(70, 120, 220), rgb(245, 200, 60)];
+
+function nacrtajDevojku(x, y, razmera, desno, faza, poza) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(razmera, razmera);
+  if (!desno) { ctx.translate(24, 0); ctx.scale(-1, 1); }
+  ctx.lineWidth = 0.9; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const { nogaPrednja, nogaZadnja, rukaPrednja, rukaZadnja, odskok } = uglovi(poza, faza);
+  ctx.translate(0, odskok);
+  // suknja se njiše u hodu i leprša u skoku
+  const njihanje = poza === 1 ? Math.sin(faza) * 0.9 : (poza === 2 || poza === 3 ? -1.4 : 0);
+
+  // pletenica iza leđa
+  ctx.fillStyle = KOSA_Z; ctx.strokeStyle = OBRIS;
+  for (let i = 0; i < 6; i++) {
+    const bx = 7.6 - i * 0.25 - (poza === 2 ? i * 0.35 : 0), by = 10 + i * 1.9;
+    const e = elipsa(bx - 1.3, by - 1.1, 2.6, 2.3);
+    ctx.fill(e); ctx.lineWidth = 0.5; ctx.stroke(e);
+  }
+  ctx.lineWidth = 0.9;
+  ctx.fillStyle = MASNA;                                    // crvena mašna na kraju pletenice
+  const mx = 6.3 - (poza === 2 ? 2 : 0), my = 21.6;
+  ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx - 1.8, my - 1); ctx.lineTo(mx - 1.8, my + 1); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx + 1.6, my - 1); ctx.lineTo(mx + 1.6, my + 1); ctx.closePath(); ctx.fill();
+
+  nacrtajRukuZ(9, 16.8, rukaZadnja, true);
+  nacrtajNoguZ(10.5, 26, nogaZadnja, true);
+  nacrtajNoguZ(14, 26, nogaPrednja, false);
+
+  // suknja: crvena sa zelenim i tamnim prugama
+  const suknja = new Path2D();
+  suknja.moveTo(7, 22.6); suknja.lineTo(18, 22.6);
+  suknja.lineTo(20.6 + njihanje, 32);
+  suknja.quadraticCurveTo(12.5, 33.2, 4.4 + njihanje, 32);
+  suknja.closePath();
+  ctx.fillStyle = SUKNJA; ctx.fill(suknja);
+  ctx.save(); ctx.clip(suknja);
+  for (const [py, boja, deb] of [[25.2, SUKNJA_ZELENA, 0.9], [26.3, SUKNJA_TAMNA, 0.5], [28.4, SUKNJA_ZELENA, 0.9], [29.5, SUKNJA_TAMNA, 0.5], [31.2, SUKNJA_ZELENA, 1.2]]) {
+    ctx.fillStyle = boja; ctx.fillRect(0, py, 24, deb);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.4;          // nabori
+  for (let nx = 8; nx < 20; nx += 1.8) linija(nx, 23, nx + njihanje * 0.6 + (nx - 12.5) * 0.18, 33);
+  ctx.restore();
+  ctx.lineWidth = 0.9; ctx.strokeStyle = OBRIS; ctx.stroke(suknja);
+
+  // crna pregača sa izvezenim cvećem (napred)
+  const pregaca = new Path2D();
+  pregaca.moveTo(12.6, 23); pregaca.lineTo(18.2, 23);
+  pregaca.lineTo(19.8 + njihanje, 31.8);
+  pregaca.lineTo(12.2 + njihanje * 0.5, 32.2);
+  pregaca.closePath();
+  ctx.fillStyle = PREGACA; ctx.fill(pregaca);
+  const cvetovi = [[15.4, 25.6, 0], [17.2, 27.6, 1], [14.6, 28.8, 2], [17.8, 30.4, 3], [15.6, 31, 0]];
+  for (const [cx, cy, b] of cvetovi) {
+    ctx.fillStyle = rgb(70, 150, 70); ctx.fill(elipsa(cx - 1.5 + njihanje * 0.4, cy + 0.2, 1.2, 0.7));
+    ctx.fillStyle = CVECE[b]; ctx.fill(elipsa(cx - 0.65 + njihanje * 0.4, cy - 0.65, 1.3, 1.3));
+  }
+  ctx.strokeStyle = OBRIS; ctx.stroke(pregaca);
+
+  // košulja
+  const telo = zaobljen(7, 14.5, 11, 9, 2);
+  ctx.fillStyle = KOSULJA; ctx.fill(telo);
+  ctx.fillStyle = CVECE[0]; ctx.fill(elipsa(12.1, 16.6, 1.2, 1.2));    // vez na grudima
+  ctx.fillStyle = CVECE[2]; ctx.fill(elipsa(12.5, 18.4, 1.1, 1.1));
+  ctx.fillStyle = CVECE[1]; ctx.fill(elipsa(12.0, 20.0, 1.1, 1.1));
+  // crni jelek sa zlatnim vezom
+  const jelekZ = new Path2D();
+  jelekZ.moveTo(7, 16); jelekZ.quadraticCurveTo(7.4, 14.5, 9.2, 14.6); jelekZ.lineTo(11.2, 15.2);
+  jelekZ.quadraticCurveTo(10.2, 18.5, 11, 22.4); jelekZ.lineTo(7, 22.4); jelekZ.closePath();
+  const jelekP = new Path2D();
+  jelekP.moveTo(18, 16); jelekP.quadraticCurveTo(17.6, 14.5, 15.6, 14.6); jelekP.lineTo(14, 15.2);
+  jelekP.quadraticCurveTo(15, 18.5, 14.2, 22.4); jelekP.lineTo(18, 22.4); jelekP.closePath();
+  ctx.fillStyle = JELEK_Z; ctx.fill(jelekZ); ctx.fill(jelekP);
+  ctx.strokeStyle = ZLATO; ctx.lineWidth = 0.7;
+  ctx.stroke(jelekZ); ctx.stroke(jelekP);
+  ctx.fillStyle = ZLATO;                                      // zlatni vez na jeleku
+  for (const [zx, zy] of [[8.6, 17.2], [9.4, 18.6], [8.6, 20], [9.4, 21.2], [16.4, 17.2], [15.6, 18.6], [16.4, 20], [15.6, 21.2]]) {
+    ctx.fill(elipsa(zx - 0.45, zy - 0.45, 0.9, 0.9));
+  }
+  ctx.lineWidth = 0.9;
+  ctx.strokeStyle = OBRIS; ctx.stroke(telo);
+
+  // pojas
+  const pojas = zaobljen(6.6, 21.8, 11.8, 2.4, 0.7);
+  ctx.fillStyle = POJAS_Z; ctx.fill(pojas);
+  ctx.fillStyle = POJAS_ROZE; ctx.fillRect(6.8, 22.7, 11.4, 0.6);
+  ctx.strokeStyle = OBRIS; ctx.stroke(pojas);
+
+  // vrat i dukati
+  ctx.fillStyle = KOZA_SENKA; ctx.fillRect(11.2, 12.6, 3.2, 2.4);
+  for (let i = 0; i < 5; i++) {
+    const dx = 10.6 + i * 1.15, dy = 14.1 + Math.sin(i / 4 * Math.PI) * 1.1;
+    const d = elipsa(dx - 0.6, dy - 0.6, 1.2, 1.2);
+    ctx.fillStyle = ZLATO; ctx.fill(d);
+    ctx.strokeStyle = ZLATO_TAMNO; ctx.lineWidth = 0.3; ctx.stroke(d);
+  }
+  ctx.lineWidth = 0.9;
+
+  // glava
+  const lice = elipsa(7, 3.6, 12, 10.6);
+  ctx.fillStyle = KOZA; ctx.fill(lice);
+  ctx.fillStyle = KOZA; ctx.fill(elipsa(17.4, 8.6, 2.2, 2));            // nos
+  ctx.strokeStyle = OBRIS; ctx.stroke(lice);
+  ctx.fillStyle = KOZA; ctx.fill(elipsa(16.8, 8.7, 2.3, 1.9));
+  // kosa (razdeljak, začešljana nazad)
+  const kosa = new Path2D();
+  kosa.moveTo(7.2, 11.4);
+  kosa.quadraticCurveTo(5.4, 4.4, 11, 2.9);
+  kosa.quadraticCurveTo(17, 1.9, 19.1, 6.6);
+  kosa.quadraticCurveTo(16.6, 4.9, 13.8, 5.3);
+  kosa.quadraticCurveTo(11.4, 5.8, 10.8, 8.6);
+  kosa.quadraticCurveTo(10.2, 11, 7.2, 11.4);
+  kosa.closePath();
+  ctx.fillStyle = KOSA_Z; ctx.fill(kosa);
+  ctx.strokeStyle = KOSA_Z_SVETLA; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(9, 4.6); ctx.quadraticCurveTo(12.5, 3.2, 16.4, 4); ctx.stroke();
+  ctx.lineWidth = 0.9; ctx.strokeStyle = OBRIS; ctx.stroke(kosa);
+  // crveni cvet u kosi
+  ctx.fillStyle = MASNA;
+  for (let i = 0; i < 5; i++) {
+    const a = i / 5 * Math.PI * 2;
+    ctx.fill(elipsa(9.4 + Math.cos(a) * 0.9 - 0.7, 3.8 + Math.sin(a) * 0.9 - 0.7, 1.4, 1.4));
+  }
+  ctx.fillStyle = rgb(250, 210, 70); ctx.fill(elipsa(8.95, 3.35, 0.9, 0.9));
+  // oko sa trepavicama, rumenilo, usne
+  ctx.fillStyle = '#fff'; ctx.fill(elipsa(14.6, 7.3, 2.6, 2.6));
+  ctx.fillStyle = rgb(60, 40, 25); ctx.fill(elipsa(15.6, 7.8, 1.6, 1.8));
+  ctx.strokeStyle = OBRIS; ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.moveTo(14.3, 7.3); ctx.quadraticCurveTo(15.8, 6.5, 17.3, 7.1); ctx.lineTo(18, 6.4); ctx.stroke();
+  ctx.lineWidth = 0.9;
+  ctx.fillStyle = 'rgba(240,120,120,0.45)'; ctx.fill(elipsa(13.4, 9.8, 2.4, 1.4));
+  ctx.strokeStyle = rgb(200, 45, 60); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.ellipse(16.2, 10.9, 1.7, 1.2, 0, Math.PI * 160 / 180, Math.PI * 40 / 180, true); ctx.stroke();
+  ctx.lineWidth = 0.9;
+
+  nacrtajRukuZ(15.5, 16.8, rukaPrednja, false);
+  ctx.restore();
+}
+
+function nacrtajNoguZ(kukX, kukY, ugao, zadnja) {
+  ctx.save();
+  ctx.translate(kukX, kukY);
+  ctx.rotate(-ugao * Math.PI / 180);
+  const carapa = zaobljen(-1.7, 0, 3.4, 10.7, 0.6);
+  ctx.fillStyle = zadnja ? rgb(16, 16, 18) : CARAPA; ctx.fill(carapa);
+  ctx.fillStyle = zadnja ? tamnije(SARA) : SARA; ctx.fill(elipsa(-1.2, 7.4, 1, 1));
+  ctx.fillStyle = zadnja ? tamnije(SARA2) : SARA2; ctx.fill(elipsa(0.3, 7.6, 0.9, 0.9));
+  ctx.fillStyle = zadnja ? tamnije(CVECE[2]) : CVECE[2]; ctx.fill(elipsa(-0.5, 8.7, 0.9, 0.9));
+  ctx.strokeStyle = OBRIS; ctx.stroke(carapa);
+  const opanak = new Path2D();
+  opanak.moveTo(-2.4, 10.2);
+  opanak.lineTo(3, 10.2);
+  opanak.quadraticCurveTo(4.8, 10.4, 5.2, 9.2);
+  opanak.quadraticCurveTo(5.6, 11.4, 3.8, 12);
+  opanak.lineTo(-2.4, 12);
+  opanak.closePath();
+  ctx.fillStyle = zadnja ? OPANAK_TAMNI : OPANAK; ctx.fill(opanak);
+  ctx.strokeStyle = OPANAK_TAMNI; linija(-1.6, 10.6, 3, 10.6);
+  ctx.strokeStyle = OBRIS; ctx.stroke(opanak);
+  ctx.restore();
+}
+
+function nacrtajRukuZ(ramX, ramY, ugao, zadnja) {
+  ctx.save();
+  ctx.translate(ramX, ramY);
+  ctx.rotate(-ugao * Math.PI / 180);
+  const rukav = new Path2D();                                 // široki rukav košulje
+  rukav.moveTo(-1.8, -0.4); rukav.lineTo(1.8, -0.4);
+  rukav.lineTo(2.6, 7); rukav.quadraticCurveTo(0, 7.8, -2.6, 7); rukav.closePath();
+  ctx.fillStyle = zadnja ? KOSULJA_SENKA : KOSULJA; ctx.fill(rukav);
+  ctx.fillStyle = CVECE[1]; ctx.fill(elipsa(-1.3, 5, 1.1, 1.1));
+  ctx.fillStyle = CVECE[2]; ctx.fill(elipsa(0.4, 5.4, 1.1, 1.1));
+  ctx.strokeStyle = OBRIS; ctx.stroke(rukav);
+  ctx.fillStyle = MASNA;                                      // crvena traka na laktu
+  ctx.fillRect(-2.1, 2.6, 4.2, 1);
+  ctx.beginPath(); ctx.moveTo(2, 3.1); ctx.lineTo(3.6, 4.6); ctx.lineTo(3, 5); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(2, 3.1); ctx.lineTo(3.8, 2.6); ctx.lineTo(3.7, 3.4); ctx.closePath(); ctx.fill();
+  const saka = elipsa(-1.5, 7, 3, 2.8);
+  ctx.fillStyle = zadnja ? KOZA_SENKA : KOZA; ctx.fill(saka);
+  ctx.strokeStyle = OBRIS; ctx.stroke(saka);
+  ctx.restore();
+}
+
 // ljutko u plavom, sa policijskom kapom
 const LJUTKO = rgb(45, 105, 205), LJUTKO_TAMNI = rgb(25, 60, 135);
 const KAPA = rgb(20, 30, 60), KAPA_TRAKA = rgb(15, 15, 20), ZNACKA = rgb(240, 195, 50);
@@ -945,6 +1153,57 @@ function centar(tekst, velicina, y) {
   const w = ctx.measureText(tekst).width;
   senkaTekst(tekst, (SIRINA - w) / 2, y);
 }
+// ---------------- naslovni ekran sa izborom lika ----------------
+const IZBOR = {
+  M: { cx: 300, ime: 'MOMAK' },
+  Z: { cx: 500, ime: 'DEVOJKA' },
+  vrh: 168, dno: 352, pola: 62,
+  igraj: { x: 320, y: 368, w: 160, h: 44 },
+};
+function nacrtajIzborLika() {
+  ctx.fillStyle = 'rgba(10,18,40,0.86)'; ctx.fillRect(0, 0, SIRINA, VISINA);
+  centar('SUPER M.', 60, 112);
+  centar('Izaberi lik', 18, 150);
+  for (const l of ['M', 'Z']) {
+    const k = IZBOR[l], izabran = S.lik === l;
+    const okvir = zaobljen(k.cx - IZBOR.pola, IZBOR.vrh, IZBOR.pola * 2, IZBOR.dno - IZBOR.vrh, 14);
+    ctx.fillStyle = izabran ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.06)';
+    ctx.fill(okvir);
+    ctx.lineWidth = izabran ? 3 : 1.5;
+    ctx.strokeStyle = izabran ? rgb(245, 200, 60) : 'rgba(255,255,255,0.35)';
+    ctx.stroke(okvir);
+    ctx.save();
+    if (!izabran) ctx.globalAlpha = 0.5;
+    const r = 3.2, poza = izabran ? 1 : 0;        // izabrani lik maršira u mestu
+    nacrtajLik(k.cx - 12 * r, 318 - 38 * r, r, true, S.animBrojac * 0.12, poza, l);
+    ctx.restore();
+    ctx.font = `bold 17px ${FONT}`;
+    const w = ctx.measureText(k.ime).width;
+    ctx.save(); if (!izabran) ctx.globalAlpha = 0.6;
+    senkaTekst(k.ime, k.cx - w / 2, 342);
+    ctx.restore();
+  }
+  if (DODIR) {
+    const b = IZBOR.igraj;
+    ctx.fillStyle = rgb(190, 35, 45); ctx.fill(zaobljen(b.x, b.y, b.w, b.h, 22));
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(zaobljen(b.x, b.y, b.w, b.h, 22));
+    centar('▶  IGRAJ', 20, b.y + 29);
+    centar('Dodirni lik da ga izabereš', 13, 434);
+  } else {
+    centar('← →  izaberi lik        ENTER  počni igru', 18, 395);
+    centar('U igri:  ← →  kretanje     SPACE  skok     SHIFT  trčanje     P  pauza', 13, 434);
+  }
+  if (S.najboljiRezultat > 0) centar('Najbolji rezultat: ' + S.najboljiRezultat, 13, 460);
+}
+function dodirNaslovne(gx, gy) {        // gx, gy u koordinatama igre (800 x 480)
+  for (const l of ['M', 'Z']) {
+    const k = IZBOR[l];
+    if (Math.abs(gx - k.cx) <= IZBOR.pola && gy >= IZBOR.vrh && gy <= IZBOR.dno) { izaberiLik(l); return; }
+  }
+  const b = IZBOR.igraj;
+  if (gx >= b.x - 10 && gx <= b.x + b.w + 10 && gy >= b.y - 10 && gy <= b.y + b.h + 10) novaIgra();
+}
+
 function zatamni() { ctx.fillStyle = 'rgba(0,0,0,0.59)'; ctx.fillRect(0, 0, SIRINA, VISINA); }
 
 function nacrtajHUD() {
@@ -960,17 +1219,7 @@ function nacrtajHUD() {
 function nacrtajPoruke() {
   switch (S.stanje) {
     case 'NASLOVNA':
-      zatamni();
-      nacrtajLik(SIRINA / 2 - 36, 30, 3.0, true, 0, 0);
-      centar('SUPER M.', 64, 210);
-      if (DODIR) {
-        centar('Dodirni ekran za početak', 20, 265);
-        centar('◀ ▶  kretanje      SKOK  skok (drži duže = viši)      TRK  uključi / isključi', 14, 310);
-      } else {
-        centar('Pritisni ENTER za početak', 20, 265);
-        centar('← →  kretanje     SPACE  skok     SHIFT  trčanje     P  pauza', 14, 310);
-      }
-      if (S.najboljiRezultat > 0) centar('Najbolji rezultat: ' + S.najboljiRezultat, 14, 340);
+      nacrtajIzborLika();
       break;
     case 'PAUZA':
       zatamni();
@@ -981,7 +1230,7 @@ function nacrtajPoruke() {
       zatamni();
       centar('KRAJ IGRE', 56, 210);
       centar('Poeni: ' + S.poeni, 20, 255);
-      centar(DODIR ? 'Dodirni ekran za novu igru' : 'ENTER za novu igru', 16, 295);
+      centar(DODIR ? 'Dodirni ekran za nastavak' : 'ENTER za nastavak', 16, 295);
       break;
     case 'UVOD':
       ctx.fillStyle = '#000'; ctx.fillRect(0, 0, SIRINA, VISINA);
@@ -1000,7 +1249,7 @@ function nacrtajPoruke() {
       centar('ČESTITAMO!', 56, 230);
       centar('Prešao si ceo Svet 1', 22, 270);
       centar('Poeni: ' + S.poeni, 20, 305);
-      centar(DODIR ? 'Dodirni ekran za novu igru' : 'ENTER za novu igru', 16, 345);
+      centar(DODIR ? 'Dodirni ekran za nastavak' : 'ENTER za nastavak', 16, 345);
       break;
   }
 }
@@ -1031,7 +1280,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && S.s
 // KONTROLE
 // =====================================================================
 function akcija() {             // ENTER ili dodir ekrana
-  if (S.stanje === 'NASLOVNA' || S.stanje === 'KRAJ_IGRE' || S.stanje === 'SVET_ZAVRSEN') novaIgra();
+  if (S.stanje === 'NASLOVNA') novaIgra();
+  else if (S.stanje === 'KRAJ_IGRE' || S.stanje === 'SVET_ZAVRSEN') { S.trenutniNivo = 0; ucitajNivo(); S.stanje = 'NASLOVNA'; }
   else if (S.stanje === 'PAUZA') S.stanje = 'IGRA';
 }
 function pauza() {
@@ -1046,8 +1296,8 @@ function pritisniSkok() {
 // tastatura
 window.addEventListener('keydown', e => {
   switch (e.code) {
-    case 'ArrowLeft': case 'KeyA': S.levo = true; break;
-    case 'ArrowRight': case 'KeyD': S.desno = true; break;
+    case 'ArrowLeft': case 'KeyA': S.levo = true; if (S.stanje === 'NASLOVNA') izaberiLik('M'); break;
+    case 'ArrowRight': case 'KeyD': S.desno = true; if (S.stanje === 'NASLOVNA') izaberiLik('Z'); break;
     case 'ShiftLeft': case 'ShiftRight': S.trci = true; osveziTrk(); break;
     case 'Space': case 'ArrowUp': case 'KeyW': pritisniSkok(); break;
     case 'Enter': akcija(); break;
@@ -1094,7 +1344,26 @@ function osveziDugmice() {
 }
 function osveziTrk() { dugmici.trk.classList.toggle('ukljuceno', S.trci); }
 
+function uIgru(e) {
+  const r = platno.getBoundingClientRect();
+  return [(e.clientX - r.left) / r.width * SIRINA, (e.clientY - r.top) / r.height * VISINA];
+}
 document.addEventListener('pointerdown', e => {
+  if (S.stanje === 'NASLOVNA') {               // izbor lika: dodir na lik / IGRAJ, ili ◀ ▶
+    const ime0 = DODIR ? dugmeNa(e.clientX, e.clientY) : null;
+    if (ime0 === 'levo') izaberiLik('M');
+    else if (ime0 === 'desno') izaberiLik('Z');
+    else if (ime0 === 'skok') novaIgra();
+    else if (!ime0) {
+      const [gx, gy] = uIgru(e);
+      if (e.pointerType === 'mouse' && !DODIR) {
+        const pre = S.lik; dodirNaslovne(gx, gy);
+        if (S.stanje === 'NASLOVNA' && S.lik === pre && !(Math.abs(gx - IZBOR[pre].cx) <= IZBOR.pola && gy >= IZBOR.vrh && gy <= IZBOR.dno)) novaIgra();
+      } else dodirNaslovne(gx, gy);
+    }
+    e.preventDefault();
+    return;
+  }
   if (e.pointerType === 'mouse' && !DODIR) { akcija(); return; }
   const ime = dugmeNa(e.clientX, e.clientY);
   if (ime === 'trk') { S.trci = !S.trci; osveziTrk(); vibriraj(10); prsti.set(e.pointerId, null); }

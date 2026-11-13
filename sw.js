@@ -1,6 +1,6 @@
 // Offline rad: svi fajlovi igre se čuvaju na telefonu posle prvog otvaranja.
 // Kad objaviš novu verziju igre, promeni broj (v1 -> v2) da bi se telefon osvežio.
-const NAZIV = 'superm-offline-v1';
+const NAZIV = 'superm-offline-v2';
 const FAJLOVI = ['./', './index.html', './style.css', './game.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(NAZIV).then(c => c.addAll(FAJLOVI)).then(() => self.skipWaiting())));
