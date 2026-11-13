@@ -1,0 +1,37 @@
+SUPER M. ZA iPHONE — UPUTSTVO
+
+Sadržaj:
+index.html            — glavna stranica
+style.css             — izgled i dugmići na ekranu
+game.js               — cela igra (fizika, nivoi, lik, ljutko, flašica rakije)
+manifest.webmanifest  — podaci za dodavanje na početni ekran
+sw.js                 — offline rad
+icons/                — ikonice
+
+PROBA NA RAČUNARU:
+Dvaput klikni na index.html — igra se otvara u Chrome-u / Edge-u.
+Kontrole: ← → kretanje, SPACE skok, SHIFT trčanje, ENTER start, P pauza.
+
+OBJAVLJIVANJE (GitHub Pages) — isto kao IKS-OKS:
+1. Na https://github.com klikni New repository, nazovi ga npr. superm, izaberi Public, Create repository.
+2. Add file → Upload files. Izvuci ZIP na računaru i otpremi SVE fajlove i folder icons
+   (ne sam ZIP). Važno: index.html mora biti u korenu repozitorijuma.
+3. Commit changes.
+4. Settings → Pages → Source: Deploy from a branch, Branch: main, folder: /(root), Save.
+5. Sačekaj par minuta. Adresa će biti: https://TVOJE-IME.github.io/superm/
+6. Otvori tu adresu u Safariju na iPhone-u → Share (Podeli) → Add to Home Screen
+   (Dodaj na početni ekran). Ako postoji opcija Open as Web App, uključi je.
+7. Pokreni Super M. sa ikonice. Posle prvog otvaranja radi i bez interneta.
+
+KONTROLE NA iPHONE-U (telefon položeno):
+◀ ▶      kretanje (prst može da klizne sa jednog na drugo)
+SKOK     skok — drži duže za viši skok
+TRK      uključi / isključi trčanje (dugme svetli žuto kad je uključeno)
+❚❚       pauza
+Dodir bilo gde na ekranu: start, nastavak posle pauze, nova igra.
+
+NAPOMENE:
+- Ovo je web aplikacija (PWA), ne App Store aplikacija.
+- Najbolji rezultat se čuva na telefonu.
+- Kad objaviš novu verziju igre, u sw.js promeni superm-offline-v1 u v2 (pa v3...),
+  inače će telefon i dalje prikazivati staru verziju iz keša.
