@@ -28,13 +28,15 @@ const SKOK_BAFER = 6;
 const NEPRIJATELJ_BRZINA = 1.0;
 
 const PW = 20, PH_MALI = 36, PH_VELIKI = 52;
+const VATRA_TRAJANJE = 600;    // ljuta paprika: 10 sekundi vatre
+const MAX_KUGLICA = 2;         // najviše 2 vatrene kuglice na ekranu odjednom
 const RAZMERA_VELIKI = PH_VELIKI / 36;
 
 // =====================================================================
 // NIVOI
 // =====================================================================
-// # zemlja   B cigla   ? kutija sa novčićem   R kutija sa flašicom rakije   = kamena platforma
-// o novčić   E ljutko   P start igrača   F zastavica (kraj nivoa)
+// # zemlja/kamen   B cigla   ? kutija sa novčićem   R kutija sa flašicom rakije   L kutija sa ljutom paprikom
+// = kamena platforma   o novčić   E ljutko   K glavni crveni ljutko   Z rešetka   P start   F zastavica
 const NIVOI = [
   [ // SVET 1-1
     "",
@@ -43,7 +45,7 @@ const NIVOI = [
     "",
     "                                                                                ooo                             o o",
     "                ?                                                               ===                            =====                       #",
-    "                                               ?                                                                                          ##",
+    "                                               L                                                                                          ##",
     "                                                                                                          o o                            ###",
     "                                                                                                         ======                         ####",
     "          ?   BBRBB                 o o o o   o o   oooo             ##       BBRB?BB                         ?                        #####",
@@ -63,7 +65,7 @@ const NIVOI = [
     "                                                                          E                                                                       ##",
     "                               oooo                                     =====                                                                    ###",
     "                              ======      E                                                                                                     ####",
-    "        BB?BB                           BBB?BBB                               ?B?B?         oo    o        ##         BBBRBBB      oooo        #####",
+    "        BB?BB                           BBB?BBB                               ?B?BL         oo    o        ##         BBBRBBB      oooo        #####",
     "                          #                           ##          =====                                   ####                                ######",
     "                         ##                           ##                                                 ######                              #######",
     "   P            E   E   ###                     E  E  ##                        E  E  E        ##       ########  E  E         E            ########                  F",
@@ -76,7 +78,7 @@ const NIVOI = [
     "",
     "",
     "                                                                                                               ?",
-    "                  o     o       o    o        o     o       o    o   ?    o     o      o    o    ?   o     o       o    o       o      o",
+    "                  o     o       o    o        o     o       o    o   L    o     o      o    o    ?   o     o       o    o       o      o",
     "                           BRB                          E                                ##",
     "                                                      #####                              ##                    E                                     #",
     "                                  ##                  #####          E            ####   ##     E            #####          E                       ##",
@@ -88,24 +90,94 @@ const NIVOI = [
     "###########  ####   ###   #####   ##   ######   ###   #####   ##   ######   ###   ####   ##   ######   ###   #####   ##   #####   ####   ###  ############################",
   ],
   [ // SVET 1-4
+    "                                                                                                                                                                                              Z",
+    "                                                                                                                                                                                              Z",
+    "                                                                                                                                                                                              Z",
+    "                                                                                                                                                                                              Z",
+    "                                                                                 o o o                                                                                                        Z",
+    "                                                                                =======                                                                                ####                   Z",
+    "                                                                                                                                                                      #####                   Z",
+    "                                                                                            oo      oo                                                               ######                   Z",
+    "                      ooo                                              E   E                                                                                        #######                   Z",
+    "        BRB                         #                        ##     BB?BBRBBLBB                                                 E       ##                         ########                   Z",
+    "                              #     #         ===           ####                                                           #   ===     ####             ===       #########                   Z",
+    "                              #     #                      ######                       ###    ####    ###             #   #          ######                     ##########           K       Z",
+    "   P          E E E           #  E  #   E E               ########   E  E    E  E       ###    ####    ###    E    E   #   #         ########  E E E            ###########                   Z   F",
+    "#####################     ###################     ###    ##################################    ####    #######################     ####################     ############################################",
+    "#####################     ###################     ###    ##################################    ####    #######################     ####################     ############################################",
+  ],
+  [ // SVET 2-1
+    "################################################################################################################################################################",
+    "################################################################################################################################################################",
+    "                 #           #                                  #               ################  #",
+    "                 #           #                                  #               ################  #",
+    "                             #                                                  ################  #",
+    "             ?                                    L                             ################                                              #",
+    "                                                                                ################                                             ##",
+    "                                                                                ################                                            ###",
+    "                                                 o o                                                                                       ####",
+    "         ? BBRBB                ooo            ======                   BB?BB                        oo                  ##               #####",
+    "                                                         #                                                              ####             ######",
+    "                       #                #               ##                        o  o  o  o                           ######           #######",
+    "   P               E   #  E             #  E  E        ###         E  E               E     E                 E  E    ########  E      ########         F",
+    "################################   #########################   #####################################    ########################################################",
+    "################################   #########################   #####################################    ########################################################",
+  ],
+  [ // SVET 2-2
+    "####################################################################################################################################################################################",
+    "####################################################################################################################################################################################",
+    "                                                                                                        ##############",
+    "                                                                                                        ##############",
+    "                                                                                                        ##############",
+    "                                                                      o o o                             ##############                                  #",
+    "                                                                        E                               ##############                                 ##",
+    "                             oooo                                     =====                             ##############                                ###",
+    "              BBBB?BBBB     ======     E                                                                                                             ####",
+    "       BB?RBB                        BBB?BBB                                 ?BLB?          oo    o                        ##            oo         #####",
+    "                          #                          ##         =====                                                     ####                     ######",
+    "                         ##                          ##                                                                  ######                   #######",
+    "   P           E   E    ###                   E   E  ##                       E  E             ##           E    E      ########  E              ########               F",
+    "#############################    ##########################   #############################    ##   ####################################    ########################################",
+    "#############################    ##########################   #############################    ##   ####################################    ########################################",
+  ],
+  [ // SVET 2-3
+    "##########################################################################################################################################################################",
+    "##########################################################################################################################################################################",
     "",
     "",
-    "",
-    "",
-    "                                                                                 o o o",
-    "                                                                                =======                                                                                ####",
-    "                                                                                                                                                                      #####",
-    "                                                                                            oo      oo                                                               ######",
-    "                      ooo                                              E   E                                                                                        #######",
-    "        BRB                         #                        ##     BB?BBRBB?BB                                                 E       ##                         ########",
-    "                              #     #         ===           ####                                                           #   ===     ####             ===       #########",
-    "                              #     #                      ######                       ###    ####    ###             #   #          ######                     ##########",
-    "   P          E E E           #  E  #   E E               ########   E  E    E  E       ###    ####    ###    E    E   #   #         ########  E E E            ###########               F",
+    "                                                                                                               ?",
+    "                                                                     ?                           L",
+    "                  o     o       o    o        o     o       o    o        o     o      o    o        o     o       o    o       o      o",
+    "                                                        E                                                      E                                     #",
+    "                                  ##                  #####          E            ####  ####                 #####          E                       ##",
+    "        R           ###     E     ##            ###   #####        ######         ####  ####  ######         #####        #####                    ###",
+    "                    ###   #####   ##     E      ###   #####   ##   ######         ####  ####  ######   ###   #####        #####   ####            ####",
+    "             ####   ###   #####   ##   ######   ###   #####   ##   ######   ###   ####  ####  ######   ###   #####   ##   #####   ####           #####",
+    "   P         ####   ###   #####   ##   ######   ###   #####   ##   ######   ###   ####  ####  ######   ###   #####   ##   #####   ####   ###    ######          F",
+    "###########  ####   ###   #####   ##   ######   ###   #####   ##   ######   ###   ####  ####  ######   ###   #####   ##   #####   ####   ###  ############################",
+    "###########  ####   ###   #####   ##   ######   ###   #####   ##   ######   ###   ####  ####  ######   ###   #####   ##   #####   ####   ###  ############################",
+  ],
+  [ // SVET 2-4
+    "########################################################################################################################################################################################################",
+    "########################################################################################################################################################################################################",
+    "                                                                                  #######                                                                                                     Z",
+    "                                                                                  #######                                                                                                     Z",
+    "                                                                                  #######                                                                                                     Z",
+    "                                                                                  #######                                                                              ####                   Z",
+    "                                                                                  #######                                                                             #####                   Z",
+    "                                                                                            oo      oo                                                               ######                   Z",
+    "                      ooo                                              E   E                                                                                        #######                   Z",
+    "        BRB                         #                        ##     BB?BBLBBRBB                                                 E       ##                         ########                   Z",
+    "                              #     #         ===           ####                                                           #   ===     ####             ===       #########                   Z",
+    "                              #     #                      ######                       ###    ####    ###             #   #          ######                     ##########           K       Z",
+    "   P          E E E           #  E  #   E E               ########   E  E    E  E       ###    ####    ###    E    E   #   #         ########  E E E            ###########                   Z   F",
     "#####################     ###################     ###    ##################################    ####    #######################     ####################     ############################################",
     "#####################     ###################     ###    ##################################    ####    #######################     ####################     ############################################",
   ],
 ];
-const VREME_NIVOA = [300, 300, 280, 260];
+const VREME_NIVOA = [300, 300, 280, 300, 300, 300, 280, 300];
+const BROJ_SVETOVA = NIVOI.length / 4;
+const IMENA_SVETOVA = ['LIVADA', 'PEĆINA'];
 
 // =====================================================================
 // STANJE IGRE
@@ -125,10 +197,22 @@ const S = {
   lik: 'M',                    // 'M' = momak, 'Z' = devojka
   kamera: 0, animBrojac: 0,
   neprijatelji: [], efekti: [], cokanji: [],
+  paprike: [], kuglice: [], vatra: 0, bacanje: 0, pucaDrzi: false,
+  glavni: null, beleKugle: [],   // glavni crveni ljutko i njegove bele kugle
+  pocetniSvet: 1, otkljucanSvet: 1,
 };
 
 try { S.najboljiRezultat = parseInt(localStorage.getItem('superm-najbolji'), 10) || 0; } catch (e) { }
 try { if (localStorage.getItem('superm-lik') === 'Z') S.lik = 'Z'; } catch (e) { }
+try { S.otkljucanSvet = Math.max(1, Math.min(BROJ_SVETOVA, parseInt(localStorage.getItem('superm-svet'), 10) || 1)); } catch (e) { }
+function otkljucajSvet(n) {
+  if (n > S.otkljucanSvet) {
+    S.otkljucanSvet = n;
+    try { localStorage.setItem('superm-svet', String(n)); } catch (e) { }
+  }
+}
+function svet() { return Math.floor(S.trenutniNivo / 4) + 1; }           // 1 = selo, 2 = pećina
+function oznakaNivoa() { return svet() + '-' + (S.trenutniNivo % 4 + 1); }
 function izaberiLik(l) {
   S.lik = l;
   try { localStorage.setItem('superm-lik', l); } catch (e) { }
@@ -144,6 +228,13 @@ function noviNeprijatelj(x, y) {
 function noviEfekat(x, y, tekst, novcic) {
   return { x, y, tekst, novcic, vy: novcic ? -6 : -1.2, zivot: novcic ? 30 : 45 };
 }
+function novaPaprika(x, vrhKutije) {    // ljuta paprika - izađe iz kutije i ostane na njoj
+  const h = 26;
+  return { x, y: vrhKutije + PLOCICA - 2 - h, w: 16, h, izlazakDo: vrhKutije - h };
+}
+function novaKuglica(x, y, smer) {
+  return { x, y, vx: 6.5 * smer, vy: 2, r: 5, zivot: 150, okret: 0 };
+}
 function noviCokanj(x, vrhKutije) {      // flašica rakije
   const h = 30;
   return { x, y: vrhKutije + PLOCICA - 2 - h, vx: 0, vy: 0, w: 16, h, izlazi: true, izlazakDo: vrhKutije - h };
@@ -158,6 +249,8 @@ function ucitajNivo() {
   S.mapaSirina = Math.max(...NIVO.map(r => r.length));
   S.mapa = [];
   S.cokanji = []; S.neprijatelji = []; S.efekti = [];
+  S.paprike = []; S.kuglice = []; S.vatra = 0; S.bacanje = 0;
+  S.glavni = null; S.beleKugle = [];
   S.veliki = false; S.PH = PH_MALI; S.rastTajmer = 0;
   for (let y = 0; y < S.mapaVisina; y++) {
     const red = [];
@@ -173,6 +266,9 @@ function ucitajNivo() {
       } else if (c === 'F') {
         S.zastavaX = x * PLOCICA;
         c = ' ';
+      } else if (c === 'K') {
+        S.glavni = noviGlavni(x * PLOCICA, y * PLOCICA + PLOCICA * 2 - GLAVNI_H);
+        c = ' ';
       }
       red.push(c);
     }
@@ -186,7 +282,7 @@ function ucitajNivo() {
 }
 
 function novaIgra() {
-  S.trenutniNivo = 0;
+  S.trenutniNivo = (S.pocetniSvet - 1) * 4;
   S.poeni = 0; S.novcici = 0; S.zivoti = 3;
   ucitajNivo();
   pokreniUvod();
@@ -197,6 +293,7 @@ function pokreniUvod() { S.stanje = 'UVOD'; S.tajmerStanja = 120; }
 function sledeciNivo() {
   if (S.trenutniNivo < NIVOI.length - 1) {
     S.trenutniNivo++;
+    otkljucajSvet(svet());
     S.novcici = 0;                       // između nivoa se čuvaju samo poeni i životi
     ucitajNivo();
     pokreniUvod();
@@ -211,7 +308,11 @@ function polje(tx, ty) {
   if (ty < 0 || ty >= S.mapaVisina) return ' ';
   return S.mapa[ty][tx];
 }
-function cvrsto(c) { return c === '#' || c === 'B' || c === '?' || c === 'R' || c === 'U' || c === '='; }
+function cvrsto(c) {
+  return c === '#' || c === 'B' || c === '?' || c === 'R' || c === 'L' || c === 'U' || c === '='
+    || (c === 'Z' && glavniZiv());               // rešetka je zatvorena dok je glavni ljutko živ
+}
+function glavniZiv() { return S.glavni !== null && S.glavni.hp > 0; }
 function cvrstoNa(x, y) { return cvrsto(polje(Math.floor(x / PLOCICA), Math.floor(y / PLOCICA))); }
 
 // =====================================================================
@@ -225,7 +326,11 @@ function azuriraj() {
       azurirajIgraca();
       if (S.stanje !== 'IGRA' && S.stanje !== 'POGINUO') break;
       azurirajCokanje();
+      azurirajPaprike();
+      azurirajVatru();
       azurirajNeprijatelje();
+      azurirajGlavnog();
+      azurirajBeleKugle();
       azurirajEfekte();
       azurirajVreme();
       azurirajKameru();
@@ -353,6 +458,9 @@ function udaracGlavom(tx, ty) {
   } else if (c === 'R') {
     S.mapa[ty][tx] = 'U';
     S.cokanji.push(noviCokanj(tx * PLOCICA + 8, ty * PLOCICA));
+  } else if (c === 'L') {
+    S.mapa[ty][tx] = 'U';
+    S.paprike.push(novaPaprika(tx * PLOCICA + 8, ty * PLOCICA));
   } else if (c === 'B' && S.veliki) {         // samo veliki momak razbija cigle
     S.mapa[ty][tx] = ' ';
     S.poeni += 50;
@@ -403,6 +511,224 @@ function azurirajCokanje() {
         S.PH = PH_VELIKI;
         S.rastTajmer = 36;
       }
+    }
+  }
+}
+
+// ---------------- ljuta paprika i vatrene kuglice ----------------
+function azurirajPaprike() {
+  for (let i = 0; i < S.paprike.length; i++) {
+    const p = S.paprike[i];
+    if (p.y > p.izlazakDo) p.y -= 1;                    // polako izlazi i ostaje na kutiji
+    if (S.px < p.x + p.w && S.px + PW > p.x && S.py < p.y + p.h && S.py + S.PH > p.y) {
+      S.paprike.splice(i, 1); i--;
+      S.poeni += 1000;
+      S.efekti.push(noviEfekat(p.x, p.y - 10, '+1000', false));
+      S.vatra = VATRA_TRAJANJE;                          // veličina ostaje ista, dobija se vatra
+      vibriraj(20);
+    }
+  }
+}
+
+function pucaj() {
+  if (S.stanje !== 'IGRA' || S.vatra <= 0 || S.rastTajmer > 0) return;
+  if (S.kuglice.length >= MAX_KUGLICA) return;
+  const smer = S.gledaDesno ? 1 : -1;
+  const x = S.gledaDesno ? S.px + PW + 2 : S.px - 2;
+  const k = novaKuglica(x, S.py + S.PH * 0.35, smer);
+  k.vx += S.pvx * 0.5;
+  S.kuglice.push(k);
+  S.bacanje = 10;
+}
+
+function azurirajVatru() {
+  if (S.vatra > 0) S.vatra--;
+  if (S.bacanje > 0) S.bacanje--;
+  for (let i = 0; i < S.kuglice.length; i++) {
+    const k = S.kuglice[i];
+    let ukloni = false;
+    k.okret += 0.35;
+    k.x += k.vx;
+    if (cvrstoNa(k.x, k.y)) ukloni = true;               // udarila u zid
+    k.vy += 0.5;
+    if (k.vy > 9) k.vy = 9;
+    k.y += k.vy;
+    if (k.vy > 0 && cvrstoNa(k.x, k.y + k.r)) {         // odskok od tla
+      k.y = Math.floor((k.y + k.r) / PLOCICA) * PLOCICA - k.r;
+      k.vy = -5.2;
+    } else if (k.vy < 0 && cvrstoNa(k.x, k.y - k.r)) {
+      k.vy = 1;
+    }
+    if (--k.zivot <= 0 || k.y > S.mapaVisina * PLOCICA || k.x < S.kamera - 20 || k.x > S.kamera + SIRINA + 20) ukloni = true;
+    const g = S.glavni;
+    if (!ukloni && g && g.hp > 0 && g.aktivan && k.x + k.r > g.x && k.x - k.r < g.x + g.w && k.y + k.r > g.y && k.y - k.r < g.y + g.h) {
+      ukloni = true;
+      pogodiGlavnogVatrom();
+    }
+    if (!ukloni) {
+      for (const n of S.neprijatelji) {                  // pogodak
+        if (!n.ziv || n.spljosten > 0 || !n.aktivan) continue;
+        if (k.x + k.r > n.x && k.x - k.r < n.x + n.w && k.y + k.r > n.y && k.y - k.r < n.y + n.h) {
+          pobediNeprijatelja(n, false);
+          ukloni = true;
+          break;
+        }
+      }
+    }
+    if (ukloni) {
+      S.efekti.push({ x: k.x, y: k.y, vy: 0, zivot: 12, iskra: true });
+      S.kuglice.splice(i, 1); i--;
+    }
+  }
+}
+
+// =====================================================================
+// GLAVNI CRVENI LJUTKO (kraj 1-4 i 2-4)
+// =====================================================================
+const GLAVNI_W = 56, GLAVNI_H = 52;
+const GLAVNI_BRZINA = 1.3;                     // ista brzina bez obzira na povrede
+const VATRE_ZA_TRECINU = 2;                    // 2 pogotka vatrom = 1/3 života
+const MAX_BELIH = 3;
+
+function noviGlavni(x, y) {
+  return { x, y, w: GLAVNI_W, h: GLAVNI_H, vx: -GLAVNI_BRZINA, vy: 0, hp: 3, naZemlji: false,
+           aktivan: false, nepov: 0, pogodaka: 0, pucanje: 90, skok: 170, umire: false, gotov: false };
+}
+
+function novaBelaKugla(x, y, smer) {
+  return { x, y, vx: 3.3 * smer, vy: -2, r: 7, okret: 0 };
+}
+
+function azurirajGlavnog() {
+  const g = S.glavni;
+  if (!g || g.gotov) return;
+  if (g.umire) {                                  // pobeđen: pada naopako sa ekrana
+    g.vy += GRAVITACIJA; g.y += g.vy;
+    if (g.y > S.mapaVisina * PLOCICA + 60) g.gotov = true;
+    return;
+  }
+  if (!g.aktivan) {
+    if (g.x < S.kamera + SIRINA - 40) g.aktivan = true;
+    else return;
+  }
+  if (g.nepov > 0) g.nepov--;
+
+  // hod levo-desno, okreće se na zidu i ivici
+  g.vx = Math.sign(g.vx || -1) * GLAVNI_BRZINA;
+  g.x += g.vx;
+  const ivica = g.vx > 0 ? g.x + g.w : g.x;
+  const zid = cvrstoNa(ivica, g.y + 4) || cvrstoNa(ivica, g.y + g.h / 2) || cvrstoNa(ivica, g.y + g.h - 4);
+  const litica = g.naZemlji && !cvrstoNa(ivica, g.y + g.h + 4);
+  const levaIvicaEkrana = g.vx < 0 && g.x < S.kamera + 140;   // ne beži ispod dugmića levo
+  if (zid || litica || levaIvicaEkrana) { g.x -= g.vx; g.vx = -g.vx; }
+
+  // povremeni skok
+  if (--g.skok <= 0 && g.naZemlji) { g.vy = -9.5; g.skok = 150 + (g.hp * 20); }
+  g.vy += GRAVITACIJA;
+  if (g.vy > MAX_PAD) g.vy = MAX_PAD;
+  g.y += g.vy;
+  g.naZemlji = false;
+  if (g.vy > 0 && (cvrstoNa(g.x + 4, g.y + g.h) || cvrstoNa(g.x + g.w - 4, g.y + g.h) || cvrstoNa(g.x + g.w / 2, g.y + g.h))) {
+    g.y = Math.floor((g.y + g.h) / PLOCICA) * PLOCICA - g.h;
+    g.vy = 0; g.naZemlji = true;
+  } else if (g.vy < 0 && (cvrstoNa(g.x + 4, g.y) || cvrstoNa(g.x + g.w - 4, g.y))) {
+    g.vy = 0;
+  }
+
+  // puca bele kugle prema igraču
+  if (--g.pucanje <= 0) {
+    g.pucanje = 120 - (3 - g.hp) * 25;
+    if (S.beleKugle.length < MAX_BELIH) {
+      const smer = (S.px + PW / 2) < (g.x + g.w / 2) ? -1 : 1;
+      S.beleKugle.push(novaBelaKugla(smer > 0 ? g.x + g.w + 4 : g.x - 4, g.y + g.h * 0.55, smer));
+    }
+  }
+
+  // dodir sa igračem
+  if (S.stanje === 'IGRA' && S.px < g.x + g.w && S.px + PW > g.x && S.py < g.y + g.h && S.py + S.PH > g.y) {
+    const odozgo = S.pvy > 0 && (S.py + S.PH - S.pvy) <= g.y + 12;
+    if (odozgo && g.nepov === 0) {
+      S.pvy = S.skokDrzi ? -12.5 : -9.5;
+      S.py = g.y - S.PH;
+      povrediGlavnog();
+    } else if (g.nepov === 0) {
+      povredi();
+    }
+  }
+}
+
+function povrediGlavnog() {                       // gaženje: skida 1/3 života
+  const g = S.glavni;
+  g.hp--;
+  g.nepov = 50;
+  vibriraj(30);
+  if (g.hp <= 0) pobediGlavnog();
+  else { S.poeni += 1000; S.efekti.push(noviEfekat(g.x + 10, g.y - 30, '+1000', false)); }
+}
+
+function pogodiGlavnogVatrom() {                  // vatra: svaka 2 pogotka skidaju 1/3 života
+  const g = S.glavni;
+  if (g.nepov > 0) return;
+  g.pogodaka++;
+  S.poeni += 200;
+  S.efekti.push(noviEfekat(g.x + 16, g.y - 30, '+200', false));
+  if (g.pogodaka >= VATRE_ZA_TRECINU) {
+    g.pogodaka = 0;
+    povrediGlavnog();
+  }
+}
+
+function pobediGlavnog() {
+  const g = S.glavni;
+  g.hp = 0; g.umire = true; g.vy = -8;
+  S.poeni += 5000;
+  S.efekti.push(noviEfekat(g.x + 4, g.y - 30, '+5000', false));
+  for (const k of S.beleKugle) S.efekti.push({ x: k.x, y: k.y, vy: 0, zivot: 12, iskra: true, bela: true });
+  S.beleKugle = [];
+  for (let y = 0; y < S.mapaVisina; y++)          // rešetka se otvara
+    for (let x = 0; x < S.mapaSirina; x++) if (S.mapa[y][x] === 'Z') S.mapa[y][x] = ' ';
+  vibriraj(120);
+}
+
+function azurirajBeleKugle() {
+  for (let i = 0; i < S.beleKugle.length; i++) {
+    const k = S.beleKugle[i];
+    let ukloni = false;
+    k.okret += 0.2;
+    k.x += k.vx;
+    if (cvrstoNa(k.x + Math.sign(k.vx) * k.r, k.y)) ukloni = true;
+    k.vy += 0.45;
+    k.y += k.vy;
+    if (k.vy > 0 && cvrstoNa(k.x, k.y + k.r)) {    // nisko odskakuje - može da se preskoči
+      k.y = Math.floor((k.y + k.r) / PLOCICA) * PLOCICA - k.r;
+      k.vy = -4.2;
+    }
+    if (k.y > S.mapaVisina * PLOCICA || k.x < S.kamera - 30 || k.x > S.kamera + SIRINA + 30) ukloni = true;
+    // vatrena kuglica gasi belu kuglu
+    if (!ukloni) {
+      for (let j = 0; j < S.kuglice.length; j++) {
+        const f = S.kuglice[j];
+        if (Math.hypot(f.x - k.x, f.y - k.y) < f.r + k.r + 2) {
+          S.kuglice.splice(j, 1);
+          S.efekti.push({ x: f.x, y: f.y, vy: 0, zivot: 12, iskra: true });
+          S.poeni += 200;
+          S.efekti.push(noviEfekat(k.x - 10, k.y - 14, '+200', false));
+          ukloni = true;
+          break;
+        }
+      }
+    }
+    // pogodak u igrača = gubi život
+    if (!ukloni && S.stanje === 'IGRA' && S.nepovredivost === 0) {
+      const najx = Math.max(S.px, Math.min(k.x, S.px + PW)), najy = Math.max(S.py, Math.min(k.y, S.py + S.PH));
+      if (Math.hypot(najx - k.x, najy - k.y) < k.r - 1) {
+        ukloni = true;
+        pogini();
+      }
+    }
+    if (ukloni) {
+      S.efekti.push({ x: k.x, y: k.y, vy: 0, zivot: 12, iskra: true, bela: true });
+      S.beleKugle.splice(i, 1); i--;
     }
   }
 }
@@ -558,22 +884,46 @@ function linija(x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineT
 
 function nacrtaj() {
   // nebo
+  const pecina = svet() === 2;
   const nebo = ctx.createLinearGradient(0, 0, 0, VISINA);
-  nebo.addColorStop(0, rgb(92, 148, 252));
-  nebo.addColorStop(1, rgb(170, 210, 255));
+  if (pecina) { nebo.addColorStop(0, rgb(14, 12, 22)); nebo.addColorStop(1, rgb(44, 34, 52)); }
+  else { nebo.addColorStop(0, rgb(92, 148, 252)); nebo.addColorStop(1, rgb(170, 210, 255)); }
   ctx.fillStyle = nebo;
   ctx.fillRect(0, 0, SIRINA, VISINA);
 
   const kx = Math.round(S.kamera);
-  nacrtajOblake(kx);
+  if (pecina) nacrtajPozadinuPecine(kx); else nacrtajOblake(kx);
   for (const c of S.cokanji) nacrtajCokanj(c.x - kx, c.y);
+  for (const p of S.paprike) nacrtajPapriku(p.x - kx, p.y);
   nacrtajMapu(kx);
   nacrtajZastavu(kx);
   for (const n of S.neprijatelji) nacrtajNeprijatelja(n, kx);
+  if (S.glavni && !S.glavni.gotov) nacrtajGlavnog(S.glavni, kx);
+  for (const k of S.beleKugle) nacrtajBeluKuglu(k.x - kx, k.y, k.r, k.okret);
+  for (const k of S.kuglice) nacrtajKuglicu(k.x - kx, k.y, k.r, k.okret);
   nacrtajEfekte(kx);
   if (S.stanje !== 'NASLOVNA' && S.stanje !== 'KRAJ_IGRE' && S.stanje !== 'SVET_ZAVRSEN') nacrtajIgraca(kx);
   if (S.stanje !== 'NASLOVNA') nacrtajHUD();
   nacrtajPoruke();
+}
+
+// pećina: daleki stalaktiti, stene i svetlucavi kristali (pomeraju se sporije od nivoa)
+function nacrtajPozadinuPecine(kx) {
+  const duzina = 12 * 300;
+  for (let i = 0; i < 12; i++) {
+    const x = Math.floor((((i * 300 - kx * 0.4) % duzina) + duzina) % duzina) - 150;
+    const v = 60 + (i * 53) % 110;
+    ctx.fillStyle = rgb(30, 25, 40);
+    ctx.beginPath(); ctx.moveTo(x, 60); ctx.lineTo(x + 26, 60 + v); ctx.lineTo(x + 52, 60); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + 90, 60); ctx.lineTo(x + 104, 60 + v * 0.5); ctx.lineTo(x + 118, 60); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = rgb(36, 30, 46);
+    const h = 70 + (i * 37) % 90;
+    ctx.beginPath(); ctx.moveTo(x + 140, 420); ctx.lineTo(x + 175, 420 - h); ctx.lineTo(x + 210, 420); ctx.closePath(); ctx.fill();
+    const sjaj = 0.45 + 0.35 * Math.sin(S.animBrojac * 0.05 + i);
+    ctx.fillStyle = i % 2 ? `rgba(120,200,255,${sjaj})` : `rgba(200,120,255,${sjaj})`;
+    const kx2 = x + 60, ky2 = 150 + (i * 71) % 180;
+    ctx.beginPath(); ctx.moveTo(kx2, ky2 - 7); ctx.lineTo(kx2 + 4, ky2); ctx.lineTo(kx2, ky2 + 7); ctx.lineTo(kx2 - 4, ky2); ctx.closePath(); ctx.fill();
+  }
 }
 
 function nacrtajOblake(kx) {
@@ -590,6 +940,7 @@ function nacrtajOblake(kx) {
 
 function nacrtajMapu(kx) {
   const prvi = Math.floor(kx / PLOCICA), poslednji = Math.floor((kx + SIRINA) / PLOCICA) + 1;
+  const pecina = svet() === 2;
   ctx.lineWidth = 1;
   for (let y = 0; y < S.mapaVisina; y++) {
     for (let x = Math.max(0, prvi); x <= poslednji && x < S.mapaSirina; x++) {
@@ -598,21 +949,35 @@ function nacrtajMapu(kx) {
       switch (c) {
         case '#': {
           const vrh = y === 0 || S.mapa[y - 1][x] !== '#';
-          ctx.fillStyle = rgb(150, 90, 50); ctx.fillRect(sx, sy, PLOCICA, PLOCICA);
-          ctx.strokeStyle = rgb(120, 70, 40); ctx.strokeRect(sx + 0.5, sy + 0.5, PLOCICA - 1, PLOCICA - 1);
-          if (vrh) { ctx.fillStyle = rgb(70, 180, 70); ctx.fillRect(sx, sy, PLOCICA, 8); }
+          if (pecina) {                                  // tamni kamen
+            ctx.fillStyle = (x + y) % 2 ? rgb(78, 70, 90) : rgb(72, 64, 84); ctx.fillRect(sx, sy, PLOCICA, PLOCICA);
+            ctx.strokeStyle = rgb(48, 42, 58); ctx.strokeRect(sx + 0.5, sy + 0.5, PLOCICA - 1, PLOCICA - 1);
+            ctx.fillStyle = rgb(95, 86, 108); ctx.fillRect(sx + 4 + (x * 7) % 14, sy + 6 + (y * 5) % 14, 6, 3);
+            if (vrh && y > 1) { ctx.fillStyle = rgb(110, 100, 125); ctx.fillRect(sx, sy, PLOCICA, 5); }
+          } else {
+            ctx.fillStyle = rgb(150, 90, 50); ctx.fillRect(sx, sy, PLOCICA, PLOCICA);
+            ctx.strokeStyle = rgb(120, 70, 40); ctx.strokeRect(sx + 0.5, sy + 0.5, PLOCICA - 1, PLOCICA - 1);
+            if (vrh) { ctx.fillStyle = rgb(70, 180, 70); ctx.fillRect(sx, sy, PLOCICA, 8); }
+          }
           break;
         }
+        case 'Z':                                        // gvozdena rešetka do zastavice
+          ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(sx + 4, sy, 24, PLOCICA);
+          ctx.fillStyle = rgb(70, 72, 80);
+          for (let b = 0; b < 4; b++) ctx.fillRect(sx + 5 + b * 7, sy, 3, PLOCICA);
+          ctx.fillStyle = rgb(110, 112, 122); ctx.fillRect(sx + 3, sy + 13, 26, 4);
+          break;
         case 'B':
-          ctx.fillStyle = rgb(190, 95, 50); ctx.fillRect(sx, sy, PLOCICA, PLOCICA);
-          ctx.strokeStyle = rgb(90, 40, 20); ctx.strokeRect(sx + 0.5, sy + 0.5, PLOCICA - 1, PLOCICA - 1);
+          ctx.fillStyle = pecina ? rgb(70, 95, 145) : rgb(190, 95, 50); ctx.fillRect(sx, sy, PLOCICA, PLOCICA);
+          ctx.strokeStyle = pecina ? rgb(30, 40, 70) : rgb(90, 40, 20); ctx.strokeRect(sx + 0.5, sy + 0.5, PLOCICA - 1, PLOCICA - 1);
           linija(sx, sy + 16.5, sx + 32, sy + 16.5);
           linija(sx + 16.5, sy, sx + 16.5, sy + 16);
           linija(sx + 8.5, sy + 16, sx + 8.5, sy + 32);
           linija(sx + 24.5, sy + 16, sx + 24.5, sy + 32);
           break;
         case '?':
-        case 'R': {
+        case 'R':
+        case 'L': {
           const puls = Math.trunc(Math.sin(S.animBrojac * 0.1) * 25);
           ctx.fillStyle = rgb(240, 180 + Math.trunc(puls / 2), 40); ctx.fill(zaobljen(sx, sy, PLOCICA, PLOCICA, 3));
           ctx.strokeStyle = rgb(140, 80, 20); ctx.stroke(zaobljen(sx + 0.5, sy + 0.5, PLOCICA - 1, PLOCICA - 1, 3));
@@ -686,10 +1051,55 @@ function nacrtajCokanj(x, y) {
   ctx.restore();
 }
 
+// ljuta paprika: crvena, povijena, sa zelenom peteljkom
+function nacrtajPapriku(x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const telo = new Path2D();
+  telo.moveTo(3, 7);
+  telo.quadraticCurveTo(3, 4.4, 8, 4.6);
+  telo.quadraticCurveTo(13.6, 4.8, 13.2, 9);
+  telo.bezierCurveTo(13, 16, 11.6, 22.5, 7.4, 25.8);
+  telo.quadraticCurveTo(5.6, 24.4, 6, 21.4);
+  telo.bezierCurveTo(5.6, 16.5, 3.2, 12.6, 3, 7);
+  telo.closePath();
+  const g = ctx.createLinearGradient(3, 0, 13, 0);
+  g.addColorStop(0, rgb(235, 45, 35)); g.addColorStop(1, rgb(170, 20, 25));
+  ctx.fillStyle = g; ctx.fill(telo);
+  ctx.strokeStyle = rgb(255, 170, 150);
+  ctx.beginPath(); ctx.moveTo(5.2, 8); ctx.bezierCurveTo(5.4, 12, 6.6, 15, 7.6, 18); ctx.stroke();
+  ctx.strokeStyle = rgb(110, 15, 20); ctx.stroke(telo);
+  // zelena čašica i peteljka
+  ctx.fillStyle = rgb(60, 150, 60);
+  ctx.fill(zaobljen(3.2, 3.4, 9.8, 3, 1.4));
+  ctx.strokeStyle = rgb(30, 90, 35); ctx.stroke(zaobljen(3.2, 3.4, 9.8, 3, 1.4));
+  ctx.strokeStyle = rgb(60, 150, 60); ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(8, 3.6); ctx.quadraticCurveTo(8.4, 0.8, 11, 0.4); ctx.stroke();
+  ctx.restore();
+}
+
+function nacrtajKuglicu(x, y, r, okret) {
+  ctx.save();
+  ctx.translate(x, y);
+  const g = ctx.createRadialGradient(0, 0, 0.5, 0, 0, r + 2);
+  g.addColorStop(0, rgb(255, 250, 200)); g.addColorStop(0.45, rgb(255, 190, 40));
+  g.addColorStop(0.8, rgb(240, 80, 20)); g.addColorStop(1, 'rgba(200,30,10,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0, 0, r + 2, 0, Math.PI * 2); ctx.fill();
+  ctx.rotate(okret);                                     // plamičci koji se vrte
+  ctx.fillStyle = rgb(255, 120, 30);
+  for (let i = 0; i < 4; i++) {
+    ctx.rotate(Math.PI / 2);
+    ctx.beginPath(); ctx.moveTo(r - 1, -2); ctx.lineTo(r + 3.5, 0); ctx.lineTo(r - 1, 2); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
 function nacrtajZastavu(kx) {
   const x = Math.trunc(S.zastavaX) - kx + PLOCICA / 2;
   const dno = (S.mapaVisina - 2) * PLOCICA;
-  const vrh = dno - 9 * PLOCICA;
+  const vrh = dno - (svet() === 2 ? 8 : 9) * PLOCICA;
   ctx.fillStyle = rgb(230, 230, 230); ctx.fillRect(x - 2, vrh, 4, dno - vrh);
   ctx.fillStyle = rgb(40, 160, 60); ctx.fill(elipsa(x - 6, vrh - 10, 12, 12));
   ctx.fillStyle = rgb(230, 50, 50);
@@ -708,7 +1118,20 @@ function nacrtajIgraca(kx) {
   if (S.rastTajmer > 0 && Math.floor(S.rastTajmer / 4) % 2 === 0) razmera = S.veliki ? 1.0 : RAZMERA_VELIKI;
   const x = S.px - kx - (24 * razmera - PW) / 2;
   const y = S.py + S.PH - 38 * razmera;
+  if (S.vatra > 0) {                                       // vatrena aura dok traje paprika
+    const pred_kraj = S.vatra < 120;
+    if (!pred_kraj || Math.floor(S.animBrojac / 5) % 2 === 0) {
+      const cx = S.px - kx + PW / 2, cy = S.py + S.PH / 2;
+      const r = S.PH * 0.75 + Math.sin(S.animBrojac * 0.25) * 2;
+      const g = ctx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r);
+      g.addColorStop(0, 'rgba(255,160,40,0.35)'); g.addColorStop(1, 'rgba(255,60,20,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  likBaca = S.bacanje > 0 && poza !== 3;
   nacrtajLik(x, y, razmera, S.gledaDesno, S.predjeno * 0.18 / razmera, poza);
+  likBaca = false;
 }
 
 // =====================================================================
@@ -732,7 +1155,13 @@ function nacrtajLik(x, y, razmera, desno, faza, poza, koji) {
   else nacrtajMomka(x, y, razmera, desno, faza, poza);
 }
 
+let likBaca = false;           // ruka ispružena napred dok baca kuglicu
 function uglovi(poza, faza) {
+  const u = osnovniUglovi(poza, faza);
+  if (likBaca) u.rukaPrednja = 80;
+  return u;
+}
+function osnovniUglovi(poza, faza) {
   let nogaPrednja = 0, nogaZadnja = 0, rukaPrednja = 0, rukaZadnja = 0, odskok = 0;
   if (poza === 1) {
     const s = Math.sin(faza);
@@ -1099,46 +1528,106 @@ function nacrtajNeprijatelja(n, kx) {
     ctx.scale(1, -1);
     ctx.translate(-(x + n.w / 2), -(y + n.h / 2));
   }
-  const desno = n.vx > 0;
-  ctx.fillStyle = LJUTKO; ctx.fill(zaobljen(x, y, n.w, n.h, 7));
-  ctx.strokeStyle = LJUTKO_TAMNI; ctx.lineWidth = 1.2; ctx.stroke(zaobljen(x + 0.5, y + 0.5, n.w - 1, n.h - 1, 7));
+  ctx.translate(x, y);
+  nacrtajTeloLjutka(n.vx > 0, LJUTKO, LJUTKO_TAMNI, false);
+  ctx.restore();
+}
+
+// telo ljutka u okviru 28 x 26 (kapa viri 9 piksela iznad)
+function nacrtajTeloLjutka(desno, boja, tamna, glavni) {
+  const w = 28, h = 26;
+  ctx.fillStyle = boja; ctx.fill(zaobljen(0, 0, w, h, 7));
+  ctx.strokeStyle = tamna; ctx.lineWidth = 1.2; ctx.stroke(zaobljen(0.5, 0.5, w - 1, h - 1, 7));
 
   const korak = Math.floor(S.animBrojac / 8) % 2 === 0 ? 0 : 3;
   ctx.fillStyle = rgb(20, 20, 25);
-  ctx.fill(elipsa(x + 1 + korak, y + n.h - 6, 10, 6));
-  ctx.fill(elipsa(x + n.w - 11 - korak, y + n.h - 6, 10, 6));
+  ctx.fill(elipsa(1 + korak, h - 6, 10, 6));
+  ctx.fill(elipsa(w - 11 - korak, h - 6, 10, 6));
 
   const pomak = desno ? 1 : -1;
-  ctx.fillStyle = '#fff';
-  ctx.fill(elipsa(x + 5, y + 7, 7, 8));
-  ctx.fill(elipsa(x + 16, y + 7, 7, 8));
+  ctx.fillStyle = glavni ? rgb(255, 235, 120) : '#fff';
+  ctx.fill(elipsa(5, 7, 7, 8));
+  ctx.fill(elipsa(16, 7, 7, 8));
   ctx.fillStyle = '#000';
-  ctx.fill(elipsa(x + 7 + pomak, y + 10, 3, 4));
-  ctx.fill(elipsa(x + 18 + pomak, y + 10, 3, 4));
+  ctx.fill(elipsa(7 + pomak, 10, 3, 4));
+  ctx.fill(elipsa(18 + pomak, 10, 3, 4));
   ctx.strokeStyle = '#000'; ctx.lineWidth = 1.6;
-  linija(x + 4, y + 6, x + 12, y + 9);
-  linija(x + 24, y + 6, x + 16, y + 9);
-  ctx.fillStyle = rgb(20, 30, 60); ctx.fill(zaobljen(x + 8, y + 17, 12, 3, 1.5));   // brk
+  linija(4, 6, 12, 9);
+  linija(24, 6, 16, 9);
+  ctx.fillStyle = glavni ? rgb(40, 15, 15) : rgb(20, 30, 60);
+  ctx.fill(zaobljen(glavni ? 6 : 8, 17, glavni ? 16 : 12, 3, 1.5));   // brk
 
   // policijska kapa
-  const cx = x + 2, cw = n.w - 4, cy = y - 9;
+  const cx = 2, cw = w - 4, cy = -9;
   ctx.fillStyle = KAPA;
   ctx.beginPath(); ctx.moveTo(cx + 2, cy + 9); ctx.lineTo(cx - 1, cy); ctx.lineTo(cx + cw + 1, cy); ctx.lineTo(cx + cw - 2, cy + 9); ctx.closePath(); ctx.fill();
   ctx.fillStyle = rgb(45, 60, 100); ctx.fillRect(cx + 1, cy + 1, cw - 2, 2);
-  ctx.fillStyle = KAPA_TRAKA; ctx.fillRect(cx + 2, cy + 6, cw - 4, 4);
-  const siltX = desno ? x + n.w - 10 : x - 4;
+  ctx.fillStyle = glavni ? ZNACKA : KAPA_TRAKA; ctx.fillRect(cx + 2, cy + 6, cw - 4, glavni ? 2.5 : 4);
+  if (glavni) { ctx.fillStyle = KAPA_TRAKA; ctx.fillRect(cx + 2, cy + 8.5, cw - 4, 1.5); }
+  ctx.fillStyle = KAPA_TRAKA;
+  const siltX = desno ? w - 10 : -4;
   ctx.fill(zaobljen(siltX, cy + 8, 14, 4, 2));
   ctx.fillStyle = ZNACKA;
-  const zx = x + Math.floor(n.w / 2) - 3;
+  const zx = Math.floor(w / 2) - 3;
   ctx.beginPath();
   ctx.moveTo(zx + 3, cy + 1); ctx.lineTo(zx + 6, cy + 3); ctx.lineTo(zx + 5, cy + 7); ctx.lineTo(zx + 1, cy + 7); ctx.lineTo(zx, cy + 3);
   ctx.closePath(); ctx.fill();
+}
+
+const GLAVNI_BOJA = rgb(210, 40, 45), GLAVNI_TAMNA = rgb(120, 15, 20);
+
+function nacrtajGlavnog(g, kx) {
+  const x = Math.round(g.x) - kx, y = Math.round(g.y);
+  if (x < -80 || x > SIRINA + 80) return;
+  ctx.save();
+  if (g.umire) {
+    ctx.translate(x + g.w / 2, y + g.h / 2); ctx.scale(1, -1); ctx.translate(-(x + g.w / 2), -(y + g.h / 2));
+  }
+  if (g.nepov > 0 && Math.floor(g.nepov / 4) % 2 === 0) ctx.globalAlpha = 0.45;     // trepće posle gaženja
+  ctx.translate(x, y);
+  ctx.scale(g.w / 28, g.h / 26);
+  const desno = (S.px + PW / 2) > (g.x + g.w / 2);
+  nacrtajTeloLjutka(desno, GLAVNI_BOJA, GLAVNI_TAMNA, true);
+  ctx.restore();
+
+  // traka života: 3 dela, svako gaženje skida jednu trećinu
+  if (!g.umire && g.aktivan) {
+    const sirina = 66, bx = x + g.w / 2 - sirina / 2, by = y - 34;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fill(zaobljen(bx - 2, by - 2, sirina + 4, 11, 4));
+    ctx.fillStyle = rgb(230, 30, 40);
+    const ostalo = Math.max(0, g.hp - g.pogodaka / VATRE_ZA_TRECINU);   // pogodak vatrom = pola trećine
+    if (ostalo > 0) ctx.fill(zaobljen(bx, by, sirina * ostalo / 3, 7, 3));
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1;
+    ctx.stroke(zaobljen(bx - 0.5, by - 0.5, sirina + 1, 8, 3.5));
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+    linija(bx + sirina / 3, by, bx + sirina / 3, by + 7);
+    linija(bx + sirina * 2 / 3, by, bx + sirina * 2 / 3, by + 7);
+  }
+}
+
+function nacrtajBeluKuglu(x, y, r, okret) {
+  ctx.save();
+  ctx.translate(x, y);
+  const g = ctx.createRadialGradient(-2, -2, 0.5, 0, 0, r + 3);
+  g.addColorStop(0, '#fff'); g.addColorStop(0.6, rgb(225, 235, 255)); g.addColorStop(1, 'rgba(160,190,255,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0, 0, r + 3, 0, Math.PI * 2); ctx.fill();
+  ctx.rotate(okret);
+  ctx.strokeStyle = rgb(150, 175, 230); ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(0, 0, r - 2, 0.3, 2.2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, r - 2, 3.4, 5.3); ctx.stroke();
   ctx.restore();
 }
 
 function nacrtajEfekte(kx) {
   ctx.font = `bold 14px ${FONT}`;
   for (const ef of S.efekti) {
+    if (ef.iskra) {                                     // kuglica se ugasila
+      const t = ef.zivot / 12;
+      ctx.fillStyle = ef.bela ? `rgba(220,230,255,${t})` : `rgba(255,${Math.floor(120 + 100 * t)},40,${t})`;
+      ctx.beginPath(); ctx.arc(ef.x - kx, ef.y, 3 + (1 - t) * 7, 0, Math.PI * 2); ctx.fill();
+      continue;
+    }
     if (ef.novcic) nacrtajNovcic(Math.trunc(ef.x) - kx, Math.trunc(ef.y));
     else { ctx.fillStyle = '#fff'; ctx.fillText(ef.tekst, Math.trunc(ef.x) - kx, Math.trunc(ef.y)); }
   }
@@ -1159,7 +1648,13 @@ const IZBOR = {
   Z: { cx: 500, ime: 'DEVOJKA' },
   vrh: 168, dno: 352, pola: 62,
   igraj: { x: 320, y: 368, w: 160, h: 44 },
+  svet: { x: 500, y: 372, w: 124, h: 36 },
 };
+if (!DODIR) IZBOR.svet = { x: 338, y: 362, w: 124, h: 34 };    // na računaru: ispod likova, iznad uputstva
+function promeniPocetniSvet() {
+  if (S.otkljucanSvet < 2) return;
+  S.pocetniSvet = S.pocetniSvet % S.otkljucanSvet + 1;
+}
 function nacrtajIzborLika() {
   ctx.fillStyle = 'rgba(10,18,40,0.86)'; ctx.fillRect(0, 0, SIRINA, VISINA);
   centar('SUPER M.', 60, 112);
@@ -1183,6 +1678,15 @@ function nacrtajIzborLika() {
     senkaTekst(k.ime, k.cx - w / 2, 342);
     ctx.restore();
   }
+  if (S.otkljucanSvet > 1) {                       // izbor sveta od kog se počinje
+    const v = IZBOR.svet;
+    ctx.fillStyle = S.pocetniSvet === 2 ? rgb(70, 60, 95) : rgb(40, 110, 60);
+    ctx.fill(zaobljen(v.x, v.y, v.w, v.h, 18));
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5; ctx.stroke(zaobljen(v.x, v.y, v.w, v.h, 18));
+    ctx.font = `bold 15px ${FONT}`;
+    const t = IMENA_SVETOVA[S.pocetniSvet - 1] + '  ⇄';
+    senkaTekst(t, v.x + (v.w - ctx.measureText(t).width) / 2, v.y + 24);
+  }
   if (DODIR) {
     const b = IZBOR.igraj;
     ctx.fillStyle = rgb(190, 35, 45); ctx.fill(zaobljen(b.x, b.y, b.w, b.h, 22));
@@ -1190,18 +1694,22 @@ function nacrtajIzborLika() {
     centar('▶  IGRAJ', 20, b.y + 29);
     centar('Dodirni lik da ga izabereš', 13, 434);
   } else {
-    centar('← →  izaberi lik        ENTER  počni igru', 18, 395);
-    centar('U igri:  ← →  kretanje     SPACE  skok     SHIFT  trčanje     P  pauza', 13, 434);
+    const sv = S.otkljucanSvet > 1;
+    centar(sv ? '← →  lik     ↑ ↓  svet     ENTER  počni' : '← →  izaberi lik        ENTER  počni igru', 18, sv ? 422 : 395);
+    centar('U igri:  ← →  kretanje     SPACE  skok     SHIFT  trčanje     X  vatra     P  pauza', 13, sv ? 446 : 434);
   }
-  if (S.najboljiRezultat > 0) centar('Najbolji rezultat: ' + S.najboljiRezultat, 13, 460);
+  if (S.najboljiRezultat > 0) centar('Najbolji rezultat: ' + S.najboljiRezultat, 13, !DODIR && S.otkljucanSvet > 1 ? 470 : 460);
 }
 function dodirNaslovne(gx, gy) {        // gx, gy u koordinatama igre (800 x 480)
   for (const l of ['M', 'Z']) {
     const k = IZBOR[l];
-    if (Math.abs(gx - k.cx) <= IZBOR.pola && gy >= IZBOR.vrh && gy <= IZBOR.dno) { izaberiLik(l); return; }
+    if (Math.abs(gx - k.cx) <= IZBOR.pola && gy >= IZBOR.vrh && gy <= IZBOR.dno) { izaberiLik(l); return 'lik'; }
   }
+  const v = IZBOR.svet;
+  if (S.otkljucanSvet > 1 && gx >= v.x && gx <= v.x + v.w && gy >= v.y - 6 && gy <= v.y + v.h + 6) { promeniPocetniSvet(); return 'svet'; }
   const b = IZBOR.igraj;
-  if (gx >= b.x - 10 && gx <= b.x + b.w + 10 && gy >= b.y - 10 && gy <= b.y + b.h + 10) novaIgra();
+  if (gx >= b.x - 10 && gx <= b.x + b.w + 10 && gy >= b.y - 10 && gy <= b.y + b.h + 10) { novaIgra(); return 'igraj'; }
+  return null;
 }
 
 function zatamni() { ctx.fillStyle = 'rgba(0,0,0,0.59)'; ctx.fillRect(0, 0, SIRINA, VISINA); }
@@ -1213,7 +1721,16 @@ function nacrtajHUD() {
   senkaTekst('NOVČIĆI ×' + String(S.novcici).padStart(2, '0'), 250, 46);
   senkaTekst('ŽIVOTI ×' + S.zivoti, 450, 46);
   senkaTekst('VREME ' + S.vreme, 640, 46);
-  senkaTekst('SVET 1-' + (S.trenutniNivo + 1), 640, 26);
+  senkaTekst('SVET ' + oznakaNivoa(), 640, 26);
+  if (S.vatra > 0) {                                       // paprika + traka preostalog vremena
+    nacrtajPapriku(250, 6);
+    const w = 110, ostalo = S.vatra / VATRA_TRAJANJE;
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fill(zaobljen(272, 13, w, 10, 5));
+    ctx.fillStyle = S.vatra < 120 && Math.floor(S.animBrojac / 5) % 2 === 0 ? rgb(255, 230, 120) : rgb(245, 110, 30);
+    ctx.fill(zaobljen(272, 13, Math.max(10, w * ostalo), 10, 5));
+    ctx.font = `bold 14px ${FONT}`;
+    senkaTekst(Math.ceil(S.vatra / 60) + 's', 272 + w + 8, 24);
+  }
 }
 
 function nacrtajPoruke() {
@@ -1235,19 +1752,22 @@ function nacrtajPoruke() {
     case 'UVOD':
       ctx.fillStyle = '#000'; ctx.fillRect(0, 0, SIRINA, VISINA);
       nacrtajHUD();
-      centar('SVET 1-' + (S.trenutniNivo + 1), 40, 200);
+      centar('SVET ' + oznakaNivoa(), 40, 170);
+      ctx.save(); ctx.globalAlpha = 0.75; centar(IMENA_SVETOVA[svet() - 1], 18, 200); ctx.restore();
+      if (S.glavni) { ctx.save(); ctx.fillStyle = rgb(255, 90, 90); ctx.font = `bold 15px ${FONT}`;
+        const t = 'Na kraju te čeka glavni ljutko!'; ctx.fillText(t, (SIRINA - ctx.measureText(t).width) / 2, 330); ctx.restore(); }
       nacrtajLik(SIRINA / 2 - 50, 240, 1.2, true, 0, 0);
       ctx.font = `bold 26px ${FONT}`;
       senkaTekst('× ' + S.zivoti, SIRINA / 2, 278);
       break;
     case 'POBEDA':
-      centar('NIVO 1-' + (S.trenutniNivo + 1) + ' ZAVRŠEN!', 44, 250);
+      centar('NIVO ' + oznakaNivoa() + ' ZAVRŠEN!', 44, 250);
       break;
     case 'SVET_ZAVRSEN':
       zatamni();
       nacrtajLik(SIRINA / 2 - 36, 40, 3.0, true, 0, 0);
       centar('ČESTITAMO!', 56, 230);
-      centar('Prešao si ceo Svet 1', 22, 270);
+      centar('Prešao si sve svetove!', 22, 270);
       centar('Poeni: ' + S.poeni, 20, 305);
       centar(DODIR ? 'Dodirni ekran za nastavak' : 'ENTER za nastavak', 16, 345);
       break;
@@ -1299,7 +1819,12 @@ window.addEventListener('keydown', e => {
     case 'ArrowLeft': case 'KeyA': S.levo = true; if (S.stanje === 'NASLOVNA') izaberiLik('M'); break;
     case 'ArrowRight': case 'KeyD': S.desno = true; if (S.stanje === 'NASLOVNA') izaberiLik('Z'); break;
     case 'ShiftLeft': case 'ShiftRight': S.trci = true; osveziTrk(); break;
-    case 'Space': case 'ArrowUp': case 'KeyW': pritisniSkok(); break;
+    case 'Space': case 'ArrowUp': case 'KeyW':
+      if (S.stanje === 'NASLOVNA' && e.code !== 'Space') { promeniPocetniSvet(); break; }
+      pritisniSkok(); break;
+    case 'ArrowDown': case 'KeyS': if (S.stanje === 'NASLOVNA') promeniPocetniSvet(); break;
+    case 'KeyX': case 'KeyF': case 'KeyK': case 'ControlLeft': case 'ControlRight':
+      if (!e.repeat) pucaj(); break;
     case 'Enter': akcija(); break;
     case 'KeyP': pauza(); break;
     default: return;
@@ -1321,12 +1846,14 @@ const dugmici = {
   desno: document.getElementById('btn-desno'),
   skok: document.getElementById('btn-skok'),
   trk: document.getElementById('btn-trk'),
+  vatra: document.getElementById('btn-vatra'),
   pauza: document.getElementById('btn-pauza'),
 };
 const prsti = new Map();       // pointerId -> naziv dugmeta ili null
 
 function dugmeNa(x, y) {
   for (const [ime, el] of Object.entries(dugmici)) {
+    if (ime === 'vatra' && !el.classList.contains('vidljivo')) continue;
     const r = el.getBoundingClientRect();
     const rez = ime === 'pauza' ? 6 : 14;           // malo veća zona dodira od samog kruga
     if (x >= r.left - rez && x <= r.right + rez && y >= r.top - rez && y <= r.bottom + rez) return ime;
@@ -1340,7 +1867,7 @@ function osveziDugmice() {
   const skok = aktivna.has('skok');
   if (skok && !S.skokDrzi) pritisniSkok();
   if (!skok) S.skokDrzi = false;
-  for (const ime of ['levo', 'desno', 'skok']) dugmici[ime].classList.toggle('pritisnuto', aktivna.has(ime));
+  for (const ime of ['levo', 'desno', 'skok', 'vatra']) dugmici[ime].classList.toggle('pritisnuto', aktivna.has(ime));
 }
 function osveziTrk() { dugmici.trk.classList.toggle('ukljuceno', S.trci); }
 
@@ -1357,8 +1884,7 @@ document.addEventListener('pointerdown', e => {
     else if (!ime0) {
       const [gx, gy] = uIgru(e);
       if (e.pointerType === 'mouse' && !DODIR) {
-        const pre = S.lik; dodirNaslovne(gx, gy);
-        if (S.stanje === 'NASLOVNA' && S.lik === pre && !(Math.abs(gx - IZBOR[pre].cx) <= IZBOR.pola && gy >= IZBOR.vrh && gy <= IZBOR.dno)) novaIgra();
+        if (dodirNaslovne(gx, gy) === null) novaIgra();      // klik van lika i sveta = počni
       } else dodirNaslovne(gx, gy);
     }
     e.preventDefault();
@@ -1367,6 +1893,7 @@ document.addEventListener('pointerdown', e => {
   if (e.pointerType === 'mouse' && !DODIR) { akcija(); return; }
   const ime = dugmeNa(e.clientX, e.clientY);
   if (ime === 'trk') { S.trci = !S.trci; osveziTrk(); vibriraj(10); prsti.set(e.pointerId, null); }
+  else if (ime === 'vatra') { if (S.vatra > 0) pucaj(); prsti.set(e.pointerId, 'vatra'); }
   else if (ime === 'pauza') { pauza(); prsti.set(e.pointerId, null); }
   else if (ime) { prsti.set(e.pointerId, ime); }
   else { prsti.set(e.pointerId, null); akcija(); }
@@ -1403,6 +1930,8 @@ function petlja(sad) {
   if (akumulator > 0.25) akumulator = 0.25;
   while (akumulator >= KORAK) { azuriraj(); akumulator -= KORAK; }
   nacrtaj();
+  const vidi = S.vatra > 0 && S.stanje !== 'NASLOVNA';
+  if (dugmici.vatra.classList.contains('vidljivo') !== vidi) dugmici.vatra.classList.toggle('vidljivo', vidi);
   requestAnimationFrame(petlja);
 }
 

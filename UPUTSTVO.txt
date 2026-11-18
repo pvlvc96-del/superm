@@ -10,7 +10,7 @@ icons/                — ikonice
 
 PROBA NA RAČUNARU:
 Dvaput klikni na index.html — igra se otvara u Chrome-u / Edge-u.
-Kontrole: ← → kretanje, SPACE skok, SHIFT trčanje, ENTER start, P pauza.
+Kontrole: ← → kretanje, SPACE skok, SHIFT trčanje, X vatra (dok traje paprika), ENTER start, P pauza.
 
 OBJAVLJIVANJE (GitHub Pages) — isto kao IKS-OKS:
 1. Na https://github.com klikni New repository, nazovi ga npr. superm, izaberi Public, Create repository.
@@ -27,8 +27,15 @@ KONTROLE NA iPHONE-U (telefon položeno):
 ◀ ▶      kretanje (prst može da klizne sa jednog na drugo)
 SKOK     skok — drži duže za viši skok
 TRK      uključi / isključi trčanje (dugme svetli žuto kad je uključeno)
+VATRA    baca vatrenu kuglicu - pojavi se samo dok traje ljuta paprika (10 s)
 ❚❚       pauza
 Dodir bilo gde na ekranu: start, nastavak posle pauze, nova igra.
+
+SADRŽAJ IGRE:
+Svet 1 (Livada) i Svet 2 (Pećina), po 4 nivoa. Na kraju 1-4 i 2-4 čeka glavni crveni ljutko:
+zgazi ga 3 puta ili ga gađaj vatrom od ljute paprike (2 pogotka vatrom = jedno gaženje).
+Traka iznad njega pokazuje koliko mu je ostalo. Preskači njegove bele kugle ili ih ugasi vatrom. Rešetka do zastavice se otvara kad ga pobediš.
+Kad jednom stigneš do Pećine, na naslovnom ekranu možeš da biraš da li počinješ od Livade ili Pećine.
 
 NAPOMENE:
 - Ovo je web aplikacija (PWA), ne App Store aplikacija.
