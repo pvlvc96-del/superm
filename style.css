@@ -18,7 +18,7 @@ body.dodir #btn-pauza { display: flex; }
   position: fixed; bottom: max(14px, env(safe-area-inset-bottom)); gap: 14px; align-items: flex-end; z-index: 2;
 }
 #kontrole-levo { left: max(16px, env(safe-area-inset-left)); }
-#kontrole-desno { right: max(10px, env(safe-area-inset-right)); flex-direction: column; align-items: center; }
+#kontrole-desno { right: max(10px, env(safe-area-inset-right)); flex-direction: column; align-items: center; gap: 10px; }
 
 .dugme {
   width: 74px; height: 74px; border-radius: 50%;
@@ -32,6 +32,12 @@ body.dodir #btn-pauza { display: flex; }
 .dugme.malo { width: 58px; height: 58px; font-size: 13px; }
 .dugme.pritisnuto { transform: scale(.92); background: rgba(255,255,255,.4); }
 .dugme.veliko.pritisnuto { background: rgba(230, 70, 70, .75); }
+/* dugme za vatru se vidi samo dok traje ljuta paprika */
+.dugme.vatra { width: 66px; height: 66px; font-size: 13px; visibility: hidden;
+  background: rgba(245, 110, 30, .75); border-color: rgba(255, 230, 150, .9); color: #fff; }
+.dugme.vatra.vidljivo { visibility: visible; animation: zar 0.8s ease-in-out infinite alternate; }
+.dugme.vatra.pritisnuto { background: rgba(255, 200, 60, .95); }
+@keyframes zar { from { box-shadow: 0 0 6px rgba(255,120,30,.6); } to { box-shadow: 0 0 18px rgba(255,170,40,.95); } }
 .dugme.ukljuceno { background: rgba(240, 190, 40, .8); color: #1b2535; border-color: #fff; }
 
 #btn-pauza {
