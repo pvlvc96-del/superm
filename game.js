@@ -1841,6 +1841,27 @@ window.addEventListener('keyup', e => {
 });
 
 // dugmići na ekranu (više prstiju istovremeno, prst može da klizne sa ← na →)
+// Ako je na serveru ostao stariji index.html / style.css bez dugmeta VATRA, dodaj ga ovde,
+// da igra radi i kad nisu otpremljeni svi fajlovi.
+(function obezbediDugmeVatra() {
+  if (!document.getElementById('btn-vatra')) {
+    const d = document.createElement('div');
+    d.id = 'btn-vatra'; d.className = 'dugme vatra'; d.textContent = 'VATRA';
+    const skok = document.getElementById('btn-skok');
+    if (skok && skok.parentNode) skok.parentNode.insertBefore(d, skok); else document.body.appendChild(d);
+  }
+  if (!document.getElementById('stil-vatra')) {
+    const st = document.createElement('style');
+    st.id = 'stil-vatra';
+    st.textContent = `.dugme.vatra { width: 66px; height: 66px; font-size: 13px; visibility: hidden;
+      background: rgba(245, 110, 30, .75); border-color: rgba(255, 230, 150, .9); color: #fff; }
+      .dugme.vatra.vidljivo { visibility: visible; }
+      .dugme.vatra.pritisnuto { background: rgba(255, 200, 60, .95); }
+      #kontrole-desno { flex-direction: column; align-items: center; gap: 10px; }`;
+    document.head.appendChild(st);
+  }
+})();
+
 const dugmici = {
   levo: document.getElementById('btn-levo'),
   desno: document.getElementById('btn-desno'),
